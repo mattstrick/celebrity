@@ -1,0 +1,86 @@
+<html>
+<head>
+  <title>CELEBRITY</title>
+</head>
+<body>
+  <div id="container">
+    <form name="name_input" id="name_input">
+      <label>Type Celebrity <span>1</span>:</label>
+      <input id="celebrity_name" type="text" />
+    </form>
+
+    <div id="debug" style="display:none;">
+    </div>
+  </div>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    (function() {
+      var container, celebrityArr, debug, debugElem, addName, returnRandomName;
+
+      // Initialize Variables.
+      celebrityArr = [];
+      container = document.getElementById('container');
+      debug = (/debug/.test(window.location.search));
+      debugElem = $('#debug');
+
+      // Event Handlers
+      $('#celebrity_name').keypress(function (e) {
+        if (e.which == 13) {
+          $('form#name_input').submit();
+          return false;
+        }
+      });
+
+      $('form#name_input').on('submit', function() {
+        input = $('input');
+        console.log(input.val());
+        
+        if (celebrityArr.length < 10){
+          addName(input.val());
+          incrementLabel();
+        } else if (celebrityArr.length == 10) {
+          addName(input.val());
+          incrementLabel();
+
+          console.log(celebrityArr);
+        }
+
+        // Reset Input Field
+        input.val("");
+
+        return false;
+      });
+
+      if (debug) {
+        debugElem.show();
+      }
+
+      // Functions
+      addName = function (name) {
+        celebrityArr.push(name);
+        
+        if (debug) {
+          debugElem.html(celebrityArr.toString());
+        }
+        
+        return true;
+      };
+
+      returnRandomName = function () {
+        randIndex = Math.floor(Math.random() * celebrityArr.length);
+        console.log(randIndex);
+        if (celebrityArr.length === 1) {
+          return celebrityArr[0];
+        } else {
+          //slice the array
+        }
+      };
+
+      incrementLabel = function () {
+        return $('form#name_input span').html(celebrityArr.length + 1);
+      };
+
+    })()
+  </script>
+</body>
+</html>
