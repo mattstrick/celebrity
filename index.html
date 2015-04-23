@@ -10,18 +10,24 @@
     </form>
 
     <div id="debug" style="display:none;">
+      <ul id="steps">
+        <li>
+          Get Names
+        </li>
+      </ul>
+      <section id="celebrities"></section>
     </div>
   </div>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js" type="text/javascript"></script>
   <script type="text/javascript">
     (function() {
-      var container, celebrityArr, debug, debugElem, addName, returnRandomName;
+      var container, celebrityArr, debug, $debugElem, addName, returnRandomName;
 
       // Initialize Variables.
       celebrityArr = [];
       container = document.getElementById('container');
       debug = (/debug/.test(window.location.search));
-      debugElem = $('#debug');
+      $debugElem = $('#debug');
 
       // Event Handlers
       $('#celebrity_name').keypress(function (e) {
@@ -52,7 +58,7 @@
       });
 
       if (debug) {
-        debugElem.show();
+        $debugElem.show();
       }
 
       // Functions
@@ -60,7 +66,7 @@
         celebrityArr.push(name);
         
         if (debug) {
-          debugElem.html(celebrityArr.toString());
+          $debugElem.find('#celebrities').html(celebrityArr.toString());
         }
         
         return true;
