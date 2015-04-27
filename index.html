@@ -4,7 +4,7 @@
 </head>
 <body>
   <div id="container">
-    <form name="name_input" id="name_input">
+    <form name="name_input" id="name_input" style="display:none;">
       <label>Type Celebrity <span>1</span>:</label>
       <input id="celebrity_name" type="text" />
     </form>
@@ -21,7 +21,7 @@
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js" type="text/javascript"></script>
   <script type="text/javascript">
     (function() {
-      var container, celebrityArr, debug, $debugElem, addName, returnRandomName;
+      var container, celebrityArr, debug, $debugElem, addName, returnRandomName, game;
 
       // Initialize Variables.
       celebrityArr = [];
@@ -62,6 +62,11 @@
       }
 
       // Functions
+      initialize = function () {
+        var myGame = new game();
+        myGame.stateUpdate(1);
+      };
+
       addName = function (name) {
         celebrityArr.push(name);
         
@@ -85,6 +90,36 @@
       incrementLabel = function () {
         return $('form#name_input span').html(celebrityArr.length + 1);
       };
+
+      ///////////////////
+      // Set up our Game
+      ///////////////////
+      var game = window.game = function () {
+        this.state = 0;
+      };
+      
+      game.prototype.stateUpdate = function (newState) {
+        if (this.state === newState) {
+          console.log("Can't update to the same state!");
+        } else { 
+          this.state = newState;
+          console.log("New state: " + newState);
+
+          switch (newState) {
+            case 1 : 
+              $("#name_input").show();
+              break;
+            default : 
+              console.log('State: ' + newState + " doesn't exist yet.");
+              break;
+          }
+        }
+
+        return this.state;
+      };
+
+      // Start the game
+      initialize();
 
     })()
   </script>
