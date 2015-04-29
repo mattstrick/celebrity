@@ -9,6 +9,9 @@
       <input id="celebrity_name" type="text" />
     </form>
 
+    <section id="timing">
+    </section>
+
     <div id="debug" style="display:none;">
       <ul id="steps">
         <li>
@@ -20,108 +23,247 @@
   </div>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js" type="text/javascript"></script>
   <script type="text/javascript">
-    (function() {
-      var container, celebrityArr, debug, $debugElem, addName, returnRandomName, game;
+    (function () {
+      'use strict';
+      var debug, $debugElem, initialize, Game, Celebrities;
 
       // Initialize Variables.
-      celebrityArr = [];
-      container = document.getElementById('container');
       debug = (/debug/.test(window.location.search));
       $debugElem = $('#debug');
 
-      // Event Handlers
-      $('#celebrity_name').keypress(function (e) {
-        if (e.which == 13) {
-          $('form#name_input').submit();
-          return false;
-        }
-      });
-
-      $('form#name_input').on('submit', function() {
-        input = $('input');
-        console.log(input.val());
-        
-        if (celebrityArr.length < 10){
-          addName(input.val());
-          incrementLabel();
-        } else if (celebrityArr.length == 10) {
-          addName(input.val());
-          incrementLabel();
-
-          console.log(celebrityArr);
-        }
-
-        // Reset Input Field
-        input.val("");
-
-        return false;
-      });
 
       if (debug) {
         $debugElem.show();
       }
 
-      // Functions
-      initialize = function () {
-        var myGame = new game();
-        myGame.stateUpdate(1);
-      };
-
-      addName = function (name) {
-        celebrityArr.push(name);
-        
-        if (debug) {
-          $debugElem.find('#celebrities').html(celebrityArr.toString());
-        }
-        
-        return true;
-      };
-
-      returnRandomName = function () {
-        randIndex = Math.floor(Math.random() * celebrityArr.length);
-        console.log(randIndex);
-        if (celebrityArr.length === 1) {
-          return celebrityArr[0];
-        } else {
-          //slice the array
-        }
-      };
-
-      incrementLabel = function () {
-        return $('form#name_input span').html(celebrityArr.length + 1);
-      };
 
       ///////////////////
       // Set up our Game
       ///////////////////
-      var game = window.game = function () {
+      Game = function (id) {
         this.state = 0;
+        this.celebrities = new Celebrities();
+        this.container = document.getElementById(id);
+        this.timer = new Timing();
+        self = this;
+
+        // Event Handlers
+        $('#celebrity_name').keypress(function (e) {
+          if (e.which === 13) {
+            e.preventDefault();
+            $('form#name_input').submit();
+            return false;
+          }
+        });
+
+        window.onkeydown = function (e) {
+          var key = e.keyCode;
+          if (key === 13) {
+            e.preventDefault();
+
+            if (self.state === 1) {
+              self.addName();
+            }
+          }
+
+        };
+
+        this.stateUpdate(1);
       };
       
-      game.prototype.stateUpdate = function (newState) {
-        if (this.state === newState) {
-          console.log("Can't update to the same state!");
-        } else { 
-          this.state = newState;
-          console.log("New state: " + newState);
+      Game.prototype = {
+        stateUpdate : function (newState) {
+          if (this.state === newState) {
+            console.log("Can't update to the same state!");
+          } else { 
+            this.state = newState;
+            console.log("New state: " + newState);
 
-          switch (newState) {
-            case 1 : 
-              $("#name_input").show();
-              break;
-            default : 
-              console.log('State: ' + newState + " doesn't exist yet.");
-              break;
+
+
+            switch (newState) {
+              case 1 : 
+                this.showCelebrityInput();
+                break;
+
+              case 2 :
+                this.hideCelebrityInput();
+                //Make copy of celebs array to pass to stepThroughNames
+                this.stepThroughNames();
+                break;
+
+              default : 
+                console.log('State: ' + newState + " doesn't exist yet.");
+                break;
+            }
           }
-        }
 
-        return this.state;
+          return this.state;
+        },
+
+        getState : function () {
+          return this.state;
+        },
+
+        nextState : function () {
+          var currentState = parseInt(this.state, 10);
+
+          if (debug) {
+            var step = $('#steps li')[currentState - 1];
+            var completedStep = '&#10003;' + step.innerHTML;
+
+            step.innerHTML = completedStep;
+          }
+
+          this.stateUpdate(currentState + 1);
+        },
+
+        showCelebrityInput : function () {
+          return $("#name_input").show();
+        },
+
+        hideCelebrityInput : function () {
+          return $("#name_input").hide();
+        },
+
+        incrementLabel : function () {
+          console.log(this.celebrities.getCelebritiesLength());
+          return $('form#name_input span').html(this.celebrities.getCelebritiesLength() + 1);
+        },
+
+        // Takes a celebs obj, removes one, and starts timer
+        stepThroughNames : function (celebs) {
+          //While there are names in the array
+          //Pick a name
+          //Display It
+          
+
+
+          //Countdown
+          console.log('hey');
+        },
+
+        addName : function() {
+          var $input = $('input');
+          var name = $input.val();
+          console.log(name);
+
+          if (name.trim() === "") {
+            return console.log("Input was empty!");
+          }
+
+          if (this.celebrities.getCelebritiesLength() < 9){
+            this.celebrities.addName(name);
+            this.incrementLabel();
+          } else if (this.celebrities.getCelebritiesLength() === 9) {
+            this.nextState();
+
+            console.log(this.celebrities.getArray());
+          }
+
+          // Reset Input Field
+          $input.val("");
+
+          return;
+        }
       };
 
-      // Start the game
-      initialize();
 
-    })()
+      ///////////////////
+      // Set up our Celebrity Names
+      ///////////////////
+      Celebrities = function () {
+        this.celebrityArr = [];
+      };
+
+      Celebrities.prototype = {
+        returnRandomName : function () {
+          var randIndex;
+
+          if (this.celebrityArr.length === 0) {
+            return false;
+          }
+
+          if (this.celebrityArr.length === 1) {
+            return this.celebrityArr[0];
+          }
+          
+          randIndex = Math.floor(Math.random() * this.celebrityArr.length);
+          console.log(randIndex);
+          
+          return this.celebrityArr[randIndex];
+        },
+
+        getCelebritiesLength : function () {
+          return this.celebrityArr.length;
+        },
+
+        getArray : function () {
+          return this.celebrityArr;
+        },
+
+        addName : function (name) {
+          this.celebrityArr.push(name);
+          
+          if (debug) {
+            $debugElem.find('#celebrities').html(this.celebrityArr.toString());
+          }
+          
+          return true;
+        },
+
+        addNameByArr : function (arr) {
+          this.celebrityArr = arr;
+        },
+
+        removeByIndex : function (index) {
+          return this.celebrityArr.splice(index,1);
+        },
+      };
+
+      Timing = window.Timing = function () {
+        this.repeats = 0;
+
+      };
+
+      Timing.prototype = {
+        countdown : function (repeats) {
+          var start = null;
+          var timingElem = document.getElementById('timing');
+
+          var step = function (timestamp) {
+            if (!start) start = timestamp;
+            var progress = timestamp - start;
+
+            //Timestamp
+            //console.log(timestamp);
+            //Timing
+            //console.log(progress);
+            //Timing (sec)
+            //console.log(parseInt(Math.min(progress/1000, 10)));
+            
+            //Countdown
+            timingElem.innerHTML = repeats - parseInt(Math.min(progress/1000, 10));
+            if (progress < (repeats * 1000)) {
+              window.requestAnimationFrame(step);
+            }
+          }
+
+          window.requestAnimationFrame(step);
+
+        },
+
+        setRepeats : function (num) {
+          this.repeats = num;
+        }
+      };
+
+      // Functions
+      window.onload = function () {
+        new Game('container');
+      };
+
+    })();
   </script>
 </body>
 </html>
