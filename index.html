@@ -9,6 +9,18 @@
       <input id="celebrity_name" type="text" />
     </form>
 
+    <form name="round_start" id="round_start" style="display:none;">
+      <label>Ready Round <span>1</span>:</label>
+      <button type="button" id="start_button" value="Begin">Begin</button>
+    </form>
+
+    <form name="round_end" id="round_end" style="display:none;">
+      <button type="button" id="end_button" value="Done">Done</button>
+    </form>
+
+    <section id="label">
+    </section>
+
     <section id="timing">
     </section>
 
@@ -17,15 +29,25 @@
         <li>
           Get Names
         </li>
+        <li>
+          Round 1
+        </li>
+        <li>
+          Round 2
+        </li>
+        <li>
+          Round 3
+        </li>
       </ul>
       <section id="celebrities"></section>
+      <section id="roundDebug"></section>
     </div>
   </div>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js" type="text/javascript"></script>
   <script type="text/javascript">
     (function () {
       'use strict';
-      var debug, $debugElem, initialize, Game, Celebrities;
+      var debug, $debugElem, initialize, Game, Celebrities, Timing;
 
       // Initialize Variables.
       debug = (/debug/.test(window.location.search));
@@ -44,7 +66,23 @@
         this.state = 0;
         this.celebrities = new Celebrities();
         this.container = document.getElementById(id);
+        this.label = document.getElementById('label');
         this.timer = new Timing();
+        this.height = this.container.clientHeight;
+        this.width = this.container.clientWidth;
+        this.Score = {
+          team_1 : 0,
+          team_2 : 0
+        };
+        this.Round = {
+          num : 0,
+          celebrities : new Celebrities(),
+          Score : {
+            team_1 : 0,
+            team_2 : 0
+          },
+        };
+
         self = this;
 
         // Event Handlers
@@ -55,6 +93,24 @@
             return false;
           }
         });
+
+        $('#start_button').on('click',function (e) {
+          e.preventDefault();
+          // Start Turn
+          self.startTurn();
+
+          return false;
+        });
+
+        $('#end_button').on('click',function (e) {
+          e.preventDefault();
+          // End Turn
+          self.endTurn();
+
+          return false;
+        });
+
+
 
         window.onkeydown = function (e) {
           var key = e.keyCode;
@@ -82,26 +138,29 @@
 
 
             switch (newState) {
+              // Collect Names
               case 1 : 
                 this.showCelebrityInput();
-                break;
-
-              case 2 :
-                this.hideCelebrityInput();
-                //Make copy of celebs array to pass to stepThroughNames
                 this.stepThroughNames();
                 break;
 
+              // Start Round 1
+              case 2 :
+                this.hideCelebrityInput();
+                //Make copy of celebs array to pass to stepThroughNames
+                this.roundStart();
+
+                break;
+
+              // Start Round 2
+
+              // Start Round 3
               default : 
                 console.log('State: ' + newState + " doesn't exist yet.");
                 break;
             }
           }
 
-          return this.state;
-        },
-
-        getState : function () {
           return this.state;
         },
 
@@ -118,6 +177,27 @@
           this.stateUpdate(currentState + 1);
         },
 
+        roundStart : function () {
+          var _roundNum = this.Round.num + 1;
+          var _celebrities = this.celebrities.getArray();
+
+          this.Round.Score.team_1 = 0;
+          this.Round.Score.team_2 = 0;
+
+          this.Round.celebrities.addNameByArr(_celebrities);
+          this.showRoundStartButton();
+        },
+
+        startTurn : function () {
+          this.hideRoundStartButton();
+          this.showRoundEndButton();
+          console.log('hi!');
+        },
+
+        endTurn : function () {
+
+        },
+
         showCelebrityInput : function () {
           return $("#name_input").show();
         },
@@ -126,18 +206,50 @@
           return $("#name_input").hide();
         },
 
+        showRoundStartButton : function () {
+          return $("#round_start").show();
+        },
+
+        hideRoundStartButton : function () {
+          return $("#round_start").hide();
+        },
+
+        showRoundEndButton : function () {
+          return $("#round_end").show();
+        },
+
+        hideRoundEndButton : function () {
+          return $("#round_end").hide();
+        },
+
         incrementLabel : function () {
           console.log(this.celebrities.getCelebritiesLength());
           return $('form#name_input span').html(this.celebrities.getCelebritiesLength() + 1);
         },
 
-        // Takes a celebs obj, removes one, and starts timer
-        stepThroughNames : function (celebs) {
-          //While there are names in the array
-          //Pick a name
-          //Display It
-          
+        startRound : function () {
+          var round = this.Round.num + 1;
 
+          this.showRoundButton();
+        },
+
+        // Takes a celebs obj, removes one, and starts timer
+        stepThroughNames : function () {
+          var _celebs = new Celebrities();
+          _celebs.addNameByArr(this.celebrities.returnArr());
+
+          console.log('New celebrities array ' + _celebs.returnArr());
+
+          var _name = "";
+
+          //While there are names in the array
+          while (_celebs.getCelebritiesLength() > 0) {
+            //Pick a name
+            _name = _celebs.removeByIndex(_celebs.returnRandomIndex());
+            //Display It
+            this.label.innerHTML = _name;
+            console.log(_name);
+          }
 
           //Countdown
           console.log('hey');
@@ -152,10 +264,10 @@
             return console.log("Input was empty!");
           }
 
-          if (this.celebrities.getCelebritiesLength() < 9){
+          if (!this.celebrities.isFull()){
             this.celebrities.addName(name);
             this.incrementLabel();
-          } else if (this.celebrities.getCelebritiesLength() === 9) {
+          } else {
             this.nextState();
 
             console.log(this.celebrities.getArray());
@@ -174,10 +286,11 @@
       ///////////////////
       Celebrities = function () {
         this.celebrityArr = [];
+        this.maxSize = 9;
       };
 
       Celebrities.prototype = {
-        returnRandomName : function () {
+        returnRandomIndex : function () {
           var randIndex;
 
           if (this.celebrityArr.length === 0) {
@@ -185,13 +298,13 @@
           }
 
           if (this.celebrityArr.length === 1) {
-            return this.celebrityArr[0];
+            return 0;
           }
           
           randIndex = Math.floor(Math.random() * this.celebrityArr.length);
           console.log(randIndex);
           
-          return this.celebrityArr[randIndex];
+          return randIndex;
         },
 
         getCelebritiesLength : function () {
@@ -219,17 +332,26 @@
         removeByIndex : function (index) {
           return this.celebrityArr.splice(index,1);
         },
+
+        returnArr : function () {
+          return this.celebrityArr;
+        },
+
+        isFull : function () {
+          return (this.celebrityArr.length === this.maxSize)? true : false;
+        }
       };
 
       Timing = window.Timing = function () {
         this.repeats = 0;
-
+        this.requestId = undefined;
       };
 
       Timing.prototype = {
         countdown : function (repeats) {
           var start = null;
           var timingElem = document.getElementById('timing');
+          var self = this;
 
           var step = function (timestamp) {
             if (!start) start = timestamp;
@@ -245,16 +367,28 @@
             //Countdown
             timingElem.innerHTML = repeats - parseInt(Math.min(progress/1000, 10));
             if (progress < (repeats * 1000)) {
-              window.requestAnimationFrame(step);
+              self.requestId = window.requestAnimationFrame(step);
+            }
+            // Fire when done.
+            if (parseInt(Math.min(progress/1000, 10)) == repeats) {
+              console.log("done!");
+              self.requestId = undefined;
+              return true;
             }
           }
 
-          window.requestAnimationFrame(step);
+          self.requestId = window.requestAnimationFrame(step);
 
         },
 
-        setRepeats : function (num) {
-          this.repeats = num;
+        isAnimating : function () {
+          if (!this.requestId) {
+            console.log("not running.");
+            return false;
+          } else {
+            console.log('running');
+            return true;
+          }
         }
       };
 
