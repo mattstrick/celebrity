@@ -31,12 +31,30 @@
         </li>
         <li>
           Round 1
+          <ul>
+            <li>names used: 0</li>
+            <li>names left: 0</li>
+            <li>Team 1: 0</li>
+            <li>Team 2: 0</li>
+          </ul>
         </li>
         <li>
           Round 2
+          <ul>
+            <li>names used: 0</li>
+            <li>names left: 0</li>
+            <li>Team 1: 0</li>
+            <li>Team 2: 0</li>
+          </ul>
         </li>
         <li>
           Round 3
+          <ul>
+            <li>names used: 0</li>
+            <li>names left: 0</li>
+            <li>Team 1: 0</li>
+            <li>Team 2: 0</li>
+          </ul>
         </li>
       </ul>
       <section id="celebrities"></section>
@@ -81,6 +99,12 @@
             team_1 : 0,
             team_2 : 0
           },
+        };
+
+        this.Elements = {
+          nameInput : "#name_input",
+          roundStart : "#round_start",
+          roundEnd : "#round_end"
         };
 
         self = this;
@@ -140,13 +164,13 @@
             switch (newState) {
               // Collect Names
               case 1 : 
-                this.showCelebrityInput();
+                this.showElem(this.Elements.nameInput);
                 this.stepThroughNames();
                 break;
 
               // Start Round 1
               case 2 :
-                this.hideCelebrityInput();
+                this.hideElem(this.Elements.nameInput);
                 //Make copy of celebs array to pass to stepThroughNames
                 this.roundStart();
 
@@ -185,41 +209,28 @@
           this.Round.Score.team_2 = 0;
 
           this.Round.celebrities.addNameByArr(_celebrities);
-          this.showRoundStartButton();
+          this.showElem(this.Elements.roundStart);
         },
 
         startTurn : function () {
-          this.hideRoundStartButton();
-          this.showRoundEndButton();
-          console.log('hi!');
+          this.hideElem(this.Elements.roundStart);
+          this.showElem(this.Elements.roundEnd);
+          // TODO: Get name and display it
         },
 
         endTurn : function () {
-
+          console.log('hi!');
+          // TODO: calculate points
+          // hide End Button
+          // show Start Button
         },
 
-        showCelebrityInput : function () {
-          return $("#name_input").show();
+        hideElem : function (selector) {
+          return $(selector).hide();
         },
 
-        hideCelebrityInput : function () {
-          return $("#name_input").hide();
-        },
-
-        showRoundStartButton : function () {
-          return $("#round_start").show();
-        },
-
-        hideRoundStartButton : function () {
-          return $("#round_start").hide();
-        },
-
-        showRoundEndButton : function () {
-          return $("#round_end").show();
-        },
-
-        hideRoundEndButton : function () {
-          return $("#round_end").hide();
+        showElem : function (selector) {
+          return $(selector).show();
         },
 
         incrementLabel : function () {
