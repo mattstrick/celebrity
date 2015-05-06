@@ -43,21 +43,21 @@
           Get Names
         </li>
         <li>
-          Round 1
+          Round 1 - Anything but the name
           <section>
             <p>names used: <span class="namesUsed">0</span></p>
             <p>names left: <span class="namesAvailable">0</span></p>
           </section>
         </li>
         <li>
-          Round 2
+          Round 2 - Just one word
           <section>
             <p>names used: <span class="namesUsed">0</span></p>
             <p>names left: <span class="namesAvailable">0</span></p>
           </section>
         </li>
         <li>
-          Round 3
+          Round 3 - No words allowed, just noises and non-verbal communication
           <section>
             <p>names used: <span class="namesUsed">0</span></p>
             <p>names left: <span class="namesAvailable">0</span></p>
@@ -88,6 +88,7 @@
       // Set up our Game
       ///////////////////
       Game = function (id) {
+        if (!id || id=='') id = '#container';
         this.state = 0;
         this.container = document.getElementById(id);
         this.label = document.getElementById('label');
@@ -259,6 +260,14 @@
 
           this.Round.celebrities.addNameByArr(_celebrities);
           this.Round.num = _roundNum;
+          
+          // The team with the lowest points goes first
+          if (this.Score.team_1 <= this.Score.team_2) {
+            this.team = 1;
+          } else {
+            this.team = 2;
+          }
+
           this.showElem(this.Elements.roundStart);
 
           this.labelUpdate("Begin Round " + _roundNum + "<br /> Team " + this.team);
