@@ -44,30 +44,24 @@
         </li>
         <li>
           Round 1
-          <ul>
-            <li>names used: 0</li>
-            <li>names left: 0</li>
-            <li>Team 1: 0</li>
-            <li>Team 2: 0</li>
-          </ul>
+          <section>
+            <p>names used: <span class="namesUsed">0</span></p>
+            <p>names left: <span class="namesAvailable">0</span></p>
+          </section>
         </li>
         <li>
           Round 2
-          <ul>
-            <li>names used: 0</li>
-            <li>names left: 0</li>
-            <li>Team 1: 0</li>
-            <li>Team 2: 0</li>
-          </ul>
+          <section>
+            <p>names used: <span class="namesUsed">0</span></p>
+            <p>names left: <span class="namesAvailable">0</span></p>
+          </section>
         </li>
         <li>
           Round 3
-          <ul>
-            <li>names used: 0</li>
-            <li>names left: 0</li>
-            <li>Team 1: 0</li>
-            <li>Team 2: 0</li>
-          </ul>
+          <section>
+            <p>names used: <span class="namesUsed">0</span></p>
+            <p>names left: <span class="namesAvailable">0</span></p>
+          </section>
         </li>
       </ul>
       <section id="celebrities"></section>
@@ -95,12 +89,13 @@
       ///////////////////
       Game = function (id) {
         this.state = 0;
-        this.celebrities = new Celebrities();
         this.container = document.getElementById(id);
         this.label = document.getElementById('label');
         this.timer = new Timing();
         this.height = this.container.clientHeight;
         this.width = this.container.clientWidth;
+        this.numPlayers = 2;
+        this.celebrities = new Celebrities(this.numPlayers);
         this.Score = {
           team_1 : 0,
           team_2 : 0
@@ -108,7 +103,7 @@
         this.team = 1,
         this.Round = {
           num : 0,
-          celebrities : new Celebrities()
+          celebrities : new Celebrities(this.numPlayers)
         };
 
         this.Elements = {
@@ -116,7 +111,8 @@
           roundStart : "#round_start",
           roundEnd : "#round_end",
           teamSwitch : "#switch_teams",
-          nameNext : "#name_next"
+          nameNext : "#name_next",
+          label : '#label'
         };
 
         self = this;
@@ -150,17 +146,29 @@
           return false;
         });
 
+        $(this.Elements.teamSwitch).find('button').on('click',function (e) {
+          e.preventDefault();
+          // End Turn
+          self.teamSwitch();
+          self.hideElem(self.Elements.teamSwitch);
+          self.labelUpdate("Team " + self.team + " turn!");
+          self.startTurn();
+
+          return false;
+        });
+
         // Get Next Name for this turn
         $(this.Elements.nameNext).find('button').on('click', function (e) {
           e.preventDefault();
 
           self.addPoints(self.team, 1);
           if (self.Round.celebrities.getCelebritiesLength() > 0) {
-            self.getNextName();
+            var newName = self.getNextName();
+            self.labelUpdate("Name: " + newName);
           } else {
             self.hideElem(self.Elements.nameNext);
             self.timer.cancelCountdown();
-
+            self.nextState();
           }
 
           return false;
@@ -192,7 +200,6 @@
             console.log("New state: " + newState);
 
 
-
             switch (newState) {
               // Collect Names
               case 1 : 
@@ -202,14 +209,28 @@
               // Start Round 1
               case 2 :
                 this.hideElem(this.Elements.nameInput);
-                //Make copy of celebs array to pass to stepThroughNames
                 this.roundStart();
 
                 break;
 
               // Start Round 2
+              case 3 :
+                this.roundStart();
+
+                break;
 
               // Start Round 3
+              case 4 :
+                this.roundStart();
+
+                break;
+
+              case 5 : 
+                // Get Winner
+                this.labelUpdate("GAME OVER!");
+
+                break;
+
               default : 
                 console.log('State: ' + newState + " doesn't exist yet.");
                 break;
@@ -237,17 +258,23 @@
           var _celebrities = this.celebrities.getArray();
 
           this.Round.celebrities.addNameByArr(_celebrities);
+          this.Round.num = _roundNum;
           this.showElem(this.Elements.roundStart);
+
+          this.labelUpdate("Begin Round " + _roundNum + "<br /> Team " + this.team);
 
         },
 
+
+
         startTurn : function () {
+          var newName = this.getNextName();
+
           this.hideElem(this.Elements.roundStart);
           this.showElem(this.Elements.nameNext);
           
           this.timer.countdown(30);
-          this.getNextName();
-          // TODO: Get name and display it
+          this.labelUpdate("Name: " + newName);
         },
 
         endTurn : function () {
@@ -292,37 +319,13 @@
           return $(selector).show();
         },
 
-        incrementLabel : function () {
+        incrementCelebrityNamesLabel : function () {
           console.log(this.celebrities.getCelebritiesLength());
           return $('form#name_input span').html(this.celebrities.getCelebritiesLength() + 1);
         },
 
-        startRound : function () {
-          var round = this.Round.num + 1;
-
-          this.showRoundButton();
-        },
-
-        // Takes a celebs obj, removes one, and starts timer
-        stepThroughNames : function () {
-          var _celebs = new Celebrities();
-          _celebs.addNameByArr(this.celebrities.returnArr());
-
-          console.log('New celebrities array ' + _celebs.returnArr());
-
-          var _name = "";
-
-          //While there are names in the array
-          while (_celebs.getCelebritiesLength() > 0) {
-            //Pick a name
-            _name = _celebs.removeByIndex(_celebs.returnRandomIndex());
-            //Display It
-            this.label.innerHTML = _name;
-            console.log(_name);
-          }
-
-          //Countdown
-          console.log('hey');
+        labelUpdate : function (msg) {
+          $(this.Elements.label).html(msg);
         },
 
         addName : function() {
@@ -334,9 +337,10 @@
             return console.log("Input was empty!");
           }
 
+          this.celebrities.addName(name);
           if (!this.celebrities.isFull()){
-            this.celebrities.addName(name);
-            this.incrementLabel();
+            console.log("we have " + this.celebrities.getCelebritiesLength() + "of " + this.celebrities.getMaxSize());
+            this.incrementCelebrityNamesLabel();
           } else {
             this.nextState();
 
@@ -354,9 +358,10 @@
       ///////////////////
       // Set up our Celebrity Names
       ///////////////////
-      Celebrities = function () {
+      Celebrities = function (players) {
         this.celebrityArr = [];
         this.maxSize = 9;
+        this.numPlayers = players;
       };
 
       Celebrities.prototype = {
@@ -382,7 +387,8 @@
         },
 
         getArray : function () {
-          return this.celebrityArr;
+          // Return a copy of array, not a reference
+          return this.celebrityArr.slice(0);
         },
 
         addName : function (name) {
@@ -407,8 +413,12 @@
           return this.celebrityArr;
         },
 
+        getMaxSize : function () {
+          return this.maxSize * this.numPlayers;
+        },
+
         isFull : function () {
-          return (this.celebrityArr.length === this.maxSize)? true : false;
+          return (this.celebrityArr.length === this.maxSize * this.numPlayers)? true : false;
         }
       };
 
@@ -421,6 +431,8 @@
           var start = null;
           var timingElem = document.getElementById('timing');
           var self = this;
+
+
 
           var step = function (timestamp) {
             if (!start) start = timestamp;
@@ -444,6 +456,13 @@
             if (_seconds == repeats) {
               console.log("done!");
               self.requestId = undefined;
+              
+              // TODO: Don't want to hardcode selectors here.
+              // Hide Next Button
+              $('#name_next').hide();
+              // Show Switch Teams Button
+              $('#switch_teams').show();
+
               return true;
             }
           }
