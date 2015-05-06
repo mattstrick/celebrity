@@ -1,9 +1,33 @@
 <html>
 <head>
   <title>CELEBRITY</title>
+  <style type="text/css">
+    nav {
+      height: 20px;
+      position: fixed;
+      bottom: 0; 
+      margin: 0;
+      background: black;
+      color: white;
+    }
+    nav ul {
+      display: inline;
+      padding: 0;
+    }
+    nav li {
+      display: inline-block;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
   <div id="container">
+    <nav>
+      <ul>
+        <li>Rules</li>
+        <li>Updates</li>
+      </ul>
+    </nav>
     <form name="name_input" id="name_input" style="display:none;">
       <label>Type Celebrity <span>1</span>:</label>
       <input id="celebrity_name" type="text" />
