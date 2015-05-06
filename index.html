@@ -18,10 +18,23 @@
       <button type="button" id="end_button" value="Done">Done</button>
     </form>
 
+    <form name="switch_teams" id="switch_teams" style="display:none;">
+      <button type="button" id="switch_teams_button" value="Begin">Start Turn</button>
+    </form>
+
+    <form name="name_next" id="name_next" style="display:none;">
+      <button type="button" id="name_next_button" value="Next">Next</button>
+    </form>
+
     <section id="label">
     </section>
 
     <section id="timing">
+    </section>
+
+    <section id="score">
+      <p class="team1">Team 1 <span>0</span></p>
+      <p class="team2">Team 2 <span>0</span></p>
     </section>
 
     <div id="debug" style="display:none;">
@@ -92,24 +105,24 @@
           team_1 : 0,
           team_2 : 0
         };
+        this.team = 1,
         this.Round = {
           num : 0,
-          celebrities : new Celebrities(),
-          Score : {
-            team_1 : 0,
-            team_2 : 0
-          },
+          celebrities : new Celebrities()
         };
 
         this.Elements = {
           nameInput : "#name_input",
           roundStart : "#round_start",
-          roundEnd : "#round_end"
+          roundEnd : "#round_end",
+          teamSwitch : "#switch_teams",
+          nameNext : "#name_next"
         };
 
         self = this;
 
         // Event Handlers
+        // Get the next celebrity name
         $('#celebrity_name').keypress(function (e) {
           if (e.which === 13) {
             e.preventDefault();
@@ -118,6 +131,7 @@
           }
         });
 
+        // Start Round
         $('#start_button').on('click',function (e) {
           e.preventDefault();
           // Start Turn
@@ -126,10 +140,28 @@
           return false;
         });
 
+        // End Round
+        // TODO: Is this still necessary?
         $('#end_button').on('click',function (e) {
           e.preventDefault();
           // End Turn
           self.endTurn();
+
+          return false;
+        });
+
+        // Get Next Name for this turn
+        $(this.Elements.nameNext).find('button').on('click', function (e) {
+          e.preventDefault();
+
+          self.addPoints(self.team, 1);
+          if (self.Round.celebrities.getCelebritiesLength() > 0) {
+            self.getNextName();
+          } else {
+            self.hideElem(self.Elements.nameNext);
+            self.timer.cancelCountdown();
+
+          }
 
           return false;
         });
@@ -165,7 +197,6 @@
               // Collect Names
               case 1 : 
                 this.showElem(this.Elements.nameInput);
-                this.stepThroughNames();
                 break;
 
               // Start Round 1
@@ -205,16 +236,17 @@
           var _roundNum = this.Round.num + 1;
           var _celebrities = this.celebrities.getArray();
 
-          this.Round.Score.team_1 = 0;
-          this.Round.Score.team_2 = 0;
-
           this.Round.celebrities.addNameByArr(_celebrities);
           this.showElem(this.Elements.roundStart);
+
         },
 
         startTurn : function () {
           this.hideElem(this.Elements.roundStart);
-          this.showElem(this.Elements.roundEnd);
+          this.showElem(this.Elements.nameNext);
+          
+          this.timer.countdown(30);
+          this.getNextName();
           // TODO: Get name and display it
         },
 
@@ -223,6 +255,33 @@
           // TODO: calculate points
           // hide End Button
           // show Start Button
+        },
+
+        getNextName : function () {
+          var _name;
+          _name = this.Round.celebrities.removeByIndex(this.Round.celebrities.returnRandomIndex()); 
+          
+          console.log (_name);
+          return _name;
+        },
+
+        addPoints : function (team, points) {
+          console.log("adding " + points + " to team: " + team);
+          if (team === 1) {
+            this.Score.team_1 += points;
+          } else {
+            this.Score.team_2 += points;
+          }
+          return this.scoreUpdate();
+        },
+
+        scoreUpdate : function () { 
+          $('.team1').find('span').html(this.Score.team_1);
+          $('.team2').find('span').html(this.Score.team_2);
+        },
+
+        teamSwitch : function () {
+          return (this.team === 1)? this.team = 2 : this.team = 1;
         },
 
         hideElem : function (selector) {
@@ -354,7 +413,6 @@
       };
 
       Timing = window.Timing = function () {
-        this.repeats = 0;
         this.requestId = undefined;
       };
 
@@ -366,22 +424,24 @@
 
           var step = function (timestamp) {
             if (!start) start = timestamp;
-            var progress = timestamp - start;
-
+            var _progress = timestamp - start;
+            var _seconds = parseInt(Math.min(_progress/1000), 10);
+            
             //Timestamp
             //console.log(timestamp);
             //Timing
-            //console.log(progress);
+            //console.log(_progress);
             //Timing (sec)
-            //console.log(parseInt(Math.min(progress/1000, 10)));
+            //console.log(_seconds);
             
             //Countdown
-            timingElem.innerHTML = repeats - parseInt(Math.min(progress/1000, 10));
-            if (progress < (repeats * 1000)) {
+            timingElem.innerHTML = repeats - _seconds;
+
+            if (_progress < (repeats * 1000)) {
               self.requestId = window.requestAnimationFrame(step);
             }
             // Fire when done.
-            if (parseInt(Math.min(progress/1000, 10)) == repeats) {
+            if (_seconds == repeats) {
               console.log("done!");
               self.requestId = undefined;
               return true;
@@ -400,6 +460,10 @@
             console.log('running');
             return true;
           }
+        },
+
+        cancelCountdown : function () {
+          return window.cancelAnimationFrame(this.requestId);
         }
       };
 
