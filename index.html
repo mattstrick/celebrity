@@ -12,34 +12,65 @@
       background-color: lightblue;
     }
 
+    #header, nav {
+      flex-grow: 1;
+      flex-shrink: 0;
+      flex-basis: 98%;
+
+    }
+
+    #header {
+      text-align: center;
+    }
+
     nav {
       height: 20px;
       margin: 0;
       background: gray;
       color: white;
-      flex-grow: 1;
-      flex-shrink: 0;
-      flex-basis: 98%;
     }
-    nav ul {
-      display: inline;
-      padding: 0;
-    }
-    nav li {
-      display: inline-block;
-      cursor: pointer;
-    }
+      nav ul {
+        display: inline;
+        padding: 0;
+      }
+      nav li {
+        display: inline-block;
+        cursor: pointer;
+      }
 
     #col1, #col2 {
       flex-grow: 1;
       flex-shrink: 0;
       flex-basis: 375px;
       border: 1px solid black;
+      padding: 0 20px;
+      position: relative;
+    }
+
+    .menuClose {
+      position: absolute;
+      top: 1em;
+      right: 1em;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div id="container">
+    <section id="header">
+      <pre>
+  /$$$$$$            /$$           /$$                 /$$   /$$              
+ /$$__  $$          | $$          | $$                |__/  | $$              
+| $$  \__/  /$$$$$$ | $$  /$$$$$$ | $$$$$$$   /$$$$$$  /$$ /$$$$$$   /$$   /$$
+| $$       /$$__  $$| $$ /$$__  $$| $$__  $$ /$$__  $$| $$|_  $$_/  | $$  | $$
+| $$      | $$$$$$$$| $$| $$$$$$$$| $$  \ $$| $$  \__/| $$  | $$    | $$  | $$
+| $$    $$| $$_____/| $$| $$_____/| $$  | $$| $$      | $$  | $$ /$$| $$  | $$
+|  $$$$$$/|  $$$$$$$| $$|  $$$$$$$| $$$$$$$/| $$      | $$  |  $$$$/|  $$$$$$$
+ \______/  \_______/|__/ \_______/|_______/ |__/      |__/   \___/   \____  $$
+                                                                     /$$  | $$
+                                                                    |  $$$$$$/
+                                                                     \______/ </pre>
+    </section>
     <section id="col1">
       <form name="name_input" id="name_input" style="display:none;">
         <label>Type Celebrity <span>1</span>:</label>
@@ -105,13 +136,14 @@
         <section id="roundDebug"></section>
       </div>
     </section>
-    <section id="col2">
-      dump
+    <section id="col2" style="display: none;">
+      <div class='menuClose'>X</div>
+      <div class="content"></div>
     </section>
     <nav>
       <ul>
-        <li><a href="http://en.wikipedia.org/wiki/Celebrity_%28game%29" target="_blank">Rules (opens in new tab)</a></li>
-        <li>Updates</li>
+        <li class="rules">Rules</li>
+        <li class="updates">Updates</li>
       </ul>
     </nav>
   </div>
@@ -148,7 +180,8 @@
           team_1 : 0,
           team_2 : 0
         };
-        this.team = 1,
+        this.Menu = '';
+        this.team = 1;
         this.Round = {
           num : 0,
           celebrities : new Celebrities(this.numPlayers)
@@ -160,7 +193,9 @@
           roundEnd : "#round_end",
           teamSwitch : "#switch_teams",
           nameNext : "#name_next",
-          label : '#label'
+          label : '#label',
+          menu : '#col2',
+          menuClose : '.menuClose'
         };
 
         self = this;
@@ -222,6 +257,18 @@
           return false;
         });
 
+        // Menu Controls
+        $('.updates').on('click', function (e) {
+          self.menuOpen('updates');
+        });
+
+        $('.rules').on('click', function (e) {
+          self.menuOpen('rules');
+        });
+
+        $(this.Elements.menuClose).on('click', function (e) {
+          self.menuClose();
+        }); 
 
 
         window.onkeydown = function (e) {
@@ -321,7 +368,64 @@
 
         },
 
+        menuOpen : function (tab) {
+          if (!tab || tab === '') tab = 'invalid';
 
+          if (tab === 'updates' && this.Menu != 'updates') {
+            // Show updates
+            this.showElem(this.Elements.menu);
+            this.Menu = 'updates';
+          }
+
+          if (tab === 'rules' && this.Menu != 'rules') {
+            // Show rules
+            this.showElem(this.Elements.menu);
+            this.Menu = 'rules';
+          } 
+
+          if (tab === 'invalid') {
+            // Do Nothing
+            this.Menu = '';
+            console.log("Tried to open and invalid tab.");
+          }
+
+          return this.addMenuContent();
+        },
+
+        menuClose : function () {
+          this.Menu = '';
+          this.hideElem(this.Elements.menu);
+        },
+
+        addMenuContent : function () {
+          // Clear out any existing content
+          $(this.Elements.menu).find('.content').html('');
+          var _content = "";
+          if (this.Menu === 'updates') {
+            // Updates Content
+            _content += "<section>" +
+                          "<h3>Game Launch - <span>May 6, 2015</span></h3>" +
+                          "<ul>" +
+                            "<li>Can play through the game</li>" +
+                            "<li>Still needs a lot of polish</li>" +
+                          "</ul>" +
+                        "</section>";
+          }
+
+          if (this.Menu === 'rules') {
+            // Rules Content
+            _content += "Rules";
+          } 
+
+          if (this.Menu === '') {
+            // Do Nothing
+            _content = '';
+            console.log("No menu set!");
+          }
+
+          // Add the content to the menu!
+          $(this.Elements.menu).find('.content').html(_content);
+        },
 
         startTurn : function () {
           var newName = this.getNextName();
