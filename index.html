@@ -2,6 +2,7 @@
 <head>
   <title>CELEBRITY</title>
   <style type="text/css">
+    /* Layout */
     #container {
       display:flex;
       flex-direction: row;
@@ -17,10 +18,6 @@
       flex-shrink: 0;
       flex-basis: 98%;
 
-    }
-
-    #header {
-      text-align: center;
     }
 
     nav {
@@ -47,12 +44,57 @@
       position: relative;
     }
 
+    /* Style */
+
+    #label {
+      font-size: 3em;
+      text-align: center;
+    }
+
+    form {
+      text-align: center;
+    }
+
+    button {
+      height: 3em;
+      width: 6em;
+    }
+
     .menuClose {
       position: absolute;
       top: 1em;
       right: 1em;
       cursor: pointer;
     }
+
+    #header {
+      text-align: center;
+    }
+
+    #rounds {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .round {
+      display: inline-block;
+      border: 1px solid black;
+      border-radius: 34px;
+      position: relative;
+      height: 2em;
+      width: 2em;
+    }
+      .round.on {
+        background-color: red;
+      }
+      .round p {
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin-right: -50%;
+        transform: translate(-50%, -50%)
+      }
   </style>
 </head>
 <body>
@@ -77,8 +119,22 @@
         <input id="celebrity_name" type="text" />
       </form>
 
+      <section id="rounds">
+        <div class="round">
+          <p>1</p>
+        </div>
+        <div class="round">
+          <p>2</p>
+        </div>
+        <div class="round">
+          <p>3</p>
+        </div>
+      </section>
+
+      <section id="label">
+      </section>
+
       <form name="round_start" id="round_start" style="display:none;">
-        <label>Ready Round <span>1</span>:</label>
         <button type="button" id="start_button" value="Begin">Begin</button>
       </form>
 
@@ -94,13 +150,11 @@
         <button type="button" id="name_next_button" value="Next">Next</button>
       </form>
 
-      <section id="label">
-      </section>
-
       <section id="timing">
       </section>
 
       <section id="score">
+        <h4>Score</h4>
         <p class="team1">Team 1 <span>0</span></p>
         <p class="team2">Team 2 <span>0</span></p>
       </section>
@@ -195,7 +249,8 @@
           nameNext : "#name_next",
           label : '#label',
           menu : '#col2',
-          menuClose : '.menuClose'
+          menuClose : '.menuClose',
+          timingLabel : '#timing'
         };
 
         self = this;
@@ -251,6 +306,7 @@
           } else {
             self.hideElem(self.Elements.nameNext);
             self.timer.cancelCountdown();
+            self.hideElem(self.Elements.timingLabel);
             self.nextState();
           }
 
@@ -362,9 +418,12 @@
             this.team = 2;
           }
 
+          // Turn on next round
+          document.getElementsByClassName('round').item(_roundNum - 1).classList.add('on');
+
           this.showElem(this.Elements.roundStart);
 
-          this.labelUpdate("Begin Round " + _roundNum + "<br /> Team " + this.team);
+          this.labelUpdate("Begin Round " + _roundNum + "<br /> Team " + this.team + " Starts");
 
         },
 
@@ -404,6 +463,13 @@
           if (this.Menu === 'updates') {
             // Updates Content
             _content += "<section>" +
+                          "<h3>Some polish - <span>May 7, 2015</span></h3>" +
+                          "<ul>" +
+                            "<li>Moved Rules and updates to a separate area</li>" +
+                            "<li>Kickass ASCII header</li>" +
+                          "</ul>" +
+                        "</section>" +
+                        "<section>" +
                           "<h3>Game Launch - <span>May 6, 2015</span></h3>" +
                           "<ul>" +
                             "<li>Can play through the game</li>" +
@@ -622,10 +688,15 @@
               $('#name_next').hide();
               // Show Switch Teams Button
               $('#switch_teams').show();
+              // Hide timing label
+              $('#timing').hide();
 
               return true;
             }
           }
+
+          // Hide timing label
+          $('#timing').show();
 
           self.requestId = window.requestAnimationFrame(step);
 
