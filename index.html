@@ -238,6 +238,7 @@
       gameBGContext.textBaseline = 'hanging';
       gameBGContext.textAlign = 'center';
 
+      // Background Functions
       var clearBG = window.clearBG = function () {
         gameBGContext.clearRect(0,0, gameBG.width, gameBG.height);
       };
@@ -411,7 +412,7 @@
 
               case 5 : 
                 // Get Winner
-                this.labelUpdate("GAME OVER!");
+                this.endGame();
 
                 break;
 
@@ -548,6 +549,19 @@
           // TODO: calculate points
           // hide End Button
           // show Start Button
+        },
+
+        endGame : function () {
+          var _winner;
+
+          if (this.Score.team_1 > this.Score.team_2) {
+            _winner = "TEAM 1 WINS!";
+          } else if (this.Score.team_1 < this.Score.team_1) {
+            _winner = "TEAM 2 WINS!";
+          } else {
+            _winner = "IT'S A TIE!";
+          }
+          this.labelUpdate("GAME OVER! " + _winner);
         },
 
         getNextName : function () {
