@@ -11,13 +11,14 @@
       align-content: flex-start;
       align-items: stretch;
       background-color: lightblue;
+      position: relative;
     }
 
     #header, nav {
       flex-grow: 1;
       flex-shrink: 0;
       flex-basis: 98%;
-
+      z-index: 5;
     }
 
     nav {
@@ -42,6 +43,7 @@
       border: 1px solid black;
       padding: 0 20px;
       position: relative;
+      z-index: 5;
     }
 
     /* Style */
@@ -74,6 +76,13 @@
     #rounds {
       text-align: center;
       margin-top: 10px;
+    }
+
+    .game_bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
     }
 
     .round {
@@ -150,9 +159,6 @@
         <button type="button" id="name_next_button" value="Next">Next</button>
       </form>
 
-      <section id="timing">
-      </section>
-
       <section id="score">
         <h4>Score</h4>
         <p class="team1">Team 1 <span>0</span></p>
@@ -206,6 +212,7 @@
     (function () {
       'use strict';
       var debug, $debugElem, initialize, Game, Celebrities, Timing;
+      var gameBG, gameBGContext;
 
       // Initialize Variables.
       debug = (/debug/.test(window.location.search));
@@ -216,6 +223,31 @@
         $debugElem.show();
       }
 
+      // Canvas Background
+      gameBG = window.gameBG = document.createElement('canvas');
+      console.log(gameBG);
+      gameBG.className = 'game_bg';
+      document.getElementById('container').appendChild(gameBG);
+      gameBG.height = document.getElementById('container').offsetHeight;
+      gameBG.width = document.getElementById('container').offsetWidth;
+      
+      // Draw test stuff 
+      gameBGContext = window.gameBGContext = gameBG.getContext("2d");
+      gameBGContext.font = (gameBG.height) + "px serif";
+      gameBGContext.fillStyle = "#aaa";
+      gameBGContext.textBaseline = 'hanging';
+      gameBGContext.textAlign = 'center';
+
+      var clearBG = window.clearBG = function () {
+        gameBGContext.clearRect(0,0, gameBG.width, gameBG.height);
+      };
+
+      var updateBG = window.updateBG = function (text) {
+        gameBGContext.font = (gameBG.height) + "px sans-serif";
+        gameBGContext.textBaseline = 'hanging';
+        gameBGContext.textAlign = 'center';
+        gameBGContext.fillText(text, gameBG.width/2, 0);
+      };
 
       ///////////////////
       // Set up our Game
@@ -248,10 +280,11 @@
           teamSwitch : "#switch_teams",
           nameNext : "#name_next",
           label : '#label',
+          game : '#col1',
           menu : '#col2',
-          menuClose : '.menuClose',
-          timingLabel : '#timing'
+          menuClose : '.menuClose'
         };
+
 
         self = this;
 
@@ -306,7 +339,7 @@
           } else {
             self.hideElem(self.Elements.nameNext);
             self.timer.cancelCountdown();
-            self.hideElem(self.Elements.timingLabel);
+            clearBG();
             self.nextState();
           }
 
@@ -662,10 +695,7 @@
       Timing.prototype = {
         countdown : function (repeats) {
           var start = null;
-          var timingElem = document.getElementById('timing');
           var self = this;
-
-
 
           var step = function (timestamp) {
             if (!start) start = timestamp;
@@ -680,7 +710,8 @@
             //console.log(_seconds);
             
             //Countdown
-            timingElem.innerHTML = repeats - _seconds;
+            clearBG();
+            updateBG(repeats - _seconds);
 
             if (_progress < (repeats * 1000)) {
               self.requestId = window.requestAnimationFrame(step);
@@ -695,15 +726,12 @@
               $('#name_next').hide();
               // Show Switch Teams Button
               $('#switch_teams').show();
-              // Hide timing label
-              $('#timing').hide();
+
+              clearBG();
 
               return true;
             }
           }
-
-          // Hide timing label
-          $('#timing').show();
 
           self.requestId = window.requestAnimationFrame(step);
 
